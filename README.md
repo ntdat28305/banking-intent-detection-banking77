@@ -2,7 +2,7 @@
 
 Fine-tune **Llama-3.2-1B-Instruct** using **4-bit QLoRA** on the **BANKING77** dataset to classify customer banking intents. Built with [Unsloth](https://github.com/unslothai/unsloth) for fast and memory-efficient training.
 
-> **Demo Video:** [Link Google Drive](https://drive.google.com/file/d/1kkcT0QjcvK_6orMYQifSLBYdnZE0nX-P/view?usp=sharing) 
+> **Demo Video:** [Link Video Demo](https://drive.google.com/file/d/1kkcT0QjcvK_6orMYQifSLBYdnZE0nX-P/view?usp=sharing) 
 
 ---
 
