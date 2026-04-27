@@ -148,9 +148,7 @@ class IntentClassification:
 
 ## Demo Video
 
-> Upload video to Google Drive, set to public, and paste link here.
-
-[Watch demo video](https://drive.google.com/your-link-here)
+[Watch demo video](https://drive.google.com/file/d/1kkcT0QjcvK_6orMYQifSLBYdnZE0nX-P/view?usp=sharing)
 
 The video demonstrates:
 - How the inference script is executed
