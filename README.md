@@ -140,7 +140,7 @@ class IntentClassification:
 
 | Metric | Value |
 |---|---|
-| Test accuracy | **92,59%** *(update after training)* |
+| Test accuracy | **92,59%** |
 | Number of intents | 77 |
 | Test samples | 2,617 |
 
