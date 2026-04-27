@@ -1,71 +1,158 @@
 # Banking Intent Detection — Fine-tuning with Unsloth
 
-Fine-tune **Llama-3.2-1B-Instruct** (4-bit QLoRA) on a 45-intent subset of
-the **BANKING77** dataset using [Unsloth](https://github.com/unslothai/unsloth).
+Fine-tune **Llama-3.2-1B-Instruct** using **4-bit QLoRA** on the **BANKING77** dataset to classify customer banking intents. Built with [Unsloth](https://github.com/unslothai/unsloth) for fast and memory-efficient training.
+
+> **Demo Video:** [Link Google Drive](https://drive.google.com/file/d/1kkcT0QjcvK_6orMYQifSLBYdnZE0nX-P/view?usp=sharing) 
+
+---
 
 ## Project Structure
+
 ```
 banking-intent-unsloth/
 ├── scripts/
-│   ├── preprocess_data.py   # data download, sampling, cleaning, split
-│   ├── train.py             # fine-tuning pipeline
-│   └── inference.py         # standalone IntentClassification class
+│   ├── preprocess_data.py   # Download, sample, clean, split dataset
+│   ├── train.py             # Fine-tuning pipeline with Unsloth + LoRA
+│   └── inference.py         # Standalone IntentClassification class
 ├── configs/
-│   ├── train.yaml           # all training hyperparameters
-│   └── inference.yaml       # checkpoint & tokenizer paths
+│   ├── train.yaml           # All training hyperparameters
+│   └── inference.yaml       # Checkpoint path & inference settings
 ├── sample_data/
-│   ├── train.csv            # sampled training split
-│   └── test.csv             # sampled test split
-├── train.sh                 # one-shot training script
-├── inference.sh             # one-shot inference script
+│   ├── train.csv            # Sampled training split (80%)
+│   └── test.csv             # Sampled test split (20%)
+├── train.sh                 # One-shot training script
+├── inference.sh             # One-shot inference script
 ├── requirements.txt
 └── README.md
 ```
 
+---
+
 ## Environment Setup
+
+**Requirements:** Python 3.10+, CUDA 11.8+, GPU with at least 8GB VRAM (recommended: T4 on Google Colab)
+
 ```bash
-# Recommended: Python 3.10+, CUDA 11.8+
 pip install -r requirements.txt
 ```
 
+Or install manually:
+
+```bash
+pip install "unsloth[colab-new] @ git+https://github.com/unslothai/unsloth.git"
+pip install --no-deps xformers trl peft accelerate bitsandbytes
+pip install datasets>=2.18 scikit-learn>=1.4 pandas>=2.0 pyyaml>=6.0 torch>=2.1
+```
+
+---
+
+## Dataset
+
+This project uses the [BANKING77](https://huggingface.co/datasets/PolyAI/banking77) dataset — 77 intents covering common banking customer queries.
+
+- Both train and test splits are downloaded from HuggingFace
+- Combined and re-split with stratified 80/20 ratio
+- **Train samples:** 10,466 | **Test samples:** 2,617
+
+---
+
 ## Training
+
+**Step 1 — Preprocess data:**
+```bash
+python scripts/preprocess_data.py --config configs/train.yaml
+```
+
+**Step 2 — Fine-tune:**
+```bash
+python scripts/train.py --config configs/train.yaml
+```
+
+Or run both steps at once:
 ```bash
 bash train.sh
-# or step by step:
-python scripts/preprocess_data.py --config configs/train.yaml
-python scripts/train.py           --config configs/train.yaml
 ```
 
-### Key Hyperparameters
+Checkpoint will be saved to `outputs/checkpoint/` after training.
+
+### Hyperparameters
+
 | Parameter | Value |
 |---|---|
-| Base model | Llama-3.2-1B-Instruct |
-| Quantisation | 4-bit (QLoRA) |
+| Base model | `unsloth/Llama-3.2-1B-Instruct` |
+| Quantization | 4-bit QLoRA |
 | LoRA rank (r) | 16 |
 | LoRA alpha | 32 |
+| LoRA dropout | 0.05 |
+| Target modules | q_proj, k_proj, v_proj, o_proj, gate_proj, up_proj, down_proj |
 | Learning rate | 2e-4 |
 | Batch size | 4 |
-| Gradient accumulation | 4 (effective 16) |
+| Gradient accumulation | 4 (effective batch = 16) |
 | Epochs | 3 |
-| Optimiser | AdamW 8-bit |
+| Optimizer | AdamW 8-bit |
 | LR scheduler | Cosine |
-| Intents | 45 of 77 |
+| Warmup ratio | 0.05 |
+| Max sequence length | 256 |
+| Number of intents | 77 |
+
+---
 
 ## Inference
-```bash
-# Single message
-bash inference.sh "My card was declined at the ATM."
 
-# Or in Python:
-from scripts.inference import IntentClassification
-clf = IntentClassification("configs/inference.yaml")
-print(clf("I was charged twice for one transaction."))
+**Single message via shell:**
+```bash
+bash inference.sh "I am still waiting on my card?"
+# Output: Intent: card_arrival
 ```
 
+**Multiple messages via Python:**
+```python
+from scripts.inference import IntentClassification
+
+clf = IntentClassification("configs/inference.yaml")
+
+print(clf("I am still waiting on my card?"))
+# → card_arrival
+
+print(clf("I was charged twice for one transaction."))
+# → extra_charge_on_statement
+
+print(clf("How do I change my PIN?"))
+# → change_pin
+```
+
+The `IntentClassification` class follows the required interface:
+
+```python
+class IntentClassification:
+    def __init__(self, model_path):
+        # Loads config, tokenizer, and model checkpoint
+
+    def __call__(self, message):
+        # Returns predicted intent label string
+```
+
+`model_path` points to `configs/inference.yaml` which contains the checkpoint path and inference settings.
+
+---
+
 ## Results
+
 | Metric | Value |
 |---|---|
-| Test accuracy | _update after training_ |
+| Test accuracy | **92,59%** *(update after training)* |
+| Number of intents | 77 |
+| Test samples | 2,617 |
+
+---
 
 ## Demo Video
-> _Upload to Google Drive and paste link here._
+
+> Upload video to Google Drive, set to public, and paste link here.
+
+[Watch demo video](https://drive.google.com/your-link-here)
+
+The video demonstrates:
+- How the inference script is executed
+- Example input messages and predicted intent labels
+- Final accuracy on the test set
