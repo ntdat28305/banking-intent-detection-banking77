@@ -1,0 +1,4 @@
+checkpoint_path : "outputs/checkpoint"
+label_map_path : "outputs/checkpoint/label_map.json"
+max_seq_length : 256
+load_in_4bit : true
